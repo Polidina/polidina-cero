@@ -463,7 +463,7 @@
           scale(escalaAbriendo);
           image(imgLlaveAbriendo, 0, 0);
         } else {
-          // CARTA ABIERTA: Mucho más chica (50% del espacio disponible para asegurar buen responsive)
+          // CARTA ABIERTA: Mucho más chica (50% del espacio disponible)
           let margenMaxW = width * 0.50;
           let margenMaxH = height * 0.50;
           let factorEscalaW = margenMaxW / imgCartaAbierta.width;
@@ -480,10 +480,11 @@
           let xBtnX = cartaAnchoReal / 2 - 30;
           let xBtnY = -cartaAltoReal / 2 + 30;
 
+          // Detección del hover de la X usando coordenadas globales
           let hoverX = dist(mouseX, mouseY, width/2 + xBtnX, height/2 + xBtnY) < 25;
           
           push();
-          translate(cartaAnchoReal / 2 - 30, -cartaAltoReal / 2 + 30);
+          translate(xBtnX, xBtnY);
           fill(hoverX ? 255 : 220, hoverX ? 90 : 80, 80);
           noStroke();
           ellipse(0, 0, 35, 35);
@@ -624,8 +625,9 @@
     function mousePressed() {
       let escalaFondo = width / anchoOriginal;
 
-      // Si la carta está completamente abierta, comprobamos si hace clic en la X para cerrar
+      // CORREGIDO: Si la carta está completamente abierta, comprobamos si hace clic en la X para cerrar
       if (estadoCarta === 2) {
+        // Recalculamos exactamente el mismo escalado y posición que se usa en draw()
         let margenMaxW = width * 0.50;
         let margenMaxH = height * 0.50;
         let factorEscalaW = margenMaxW / imgCartaAbierta.width;
@@ -635,11 +637,17 @@
         let cartaAnchoReal = imgCartaAbierta.width * escalaCartaFinal;
         let cartaAltoReal = imgCartaAbierta.height * escalaCartaFinal;
         
-        let xBtnX = width / 2 + cartaAnchoReal / 2 - 30;
-        let xBtnY = height / 2 - cartaAltoReal / 2 + 30;
+        // Posición del botón relativo al centro de la pantalla
+        let xBtnX_offset = cartaAnchoReal / 2 - 30;
+        let xBtnY_offset = -cartaAltoReal / 2 + 30;
 
-        if (dist(mouseX, mouseY, xBtnX, xBtnY) < 25) {
-          estadoCarta = 0; // Cierra la carta
+        // Coordenadas globales absolutas del botón X en la pantalla
+        let xBtnX_global = width / 2 + xBtnX_offset;
+        let xBtnY_global = height / 2 + xBtnY_offset;
+
+        // Detectamos el clic en el botón X usando las coordenadas globales corregidas
+        if (dist(mouseX, mouseY, xBtnX_global, xBtnY_global) < 25) {
+          estadoCarta = 0; // Cierra la carta correctamente
         }
         return; 
       }
@@ -685,78 +693,4 @@
         elementoAgarrado = true;
       } else {
         for (let i = polaroids.length - 1; i >= 0; i--) {
-          if (polaroids[i].verificarPresionado(mouseX, mouseY, escalaFondo)) {
-            elementoAgarrado = true;
-            let p = polaroids.splice(i, 1)[0];
-            polaroids.push(p);
-            break;
-          }
-        }
-      }
-
-      // 3. Botones y creación de peces en espacios vacíos
-      if (!elementoAgarrado && estadoCarta === 0) {
-        let personajeX = width / 2;
-        let personajeY = posYOriginal * escalaFondo;
-        let radioHover = 200 * escalaFondo;
-
-        let distanciaAlPersonaje = dist(mouseX, mouseY, personajeX, personajeY);
-        if (distanciaAlPersonaje < radioHover) {
-          impulsoClick = 0.25;
-        }
-
-        let bY = botonesYOriginal * escalaFondo;
-        let anchoBoton = 320 * escalaFondo;
-        let altoBoton = 140 * escalaFondo;
-
-        let b1X = comprarXOriginal * escalaFondo;
-        let b2X = ticketsXOriginal * escalaFondo;
-        let b3X = japonXOriginal * escalaFondo;
-
-        let cartelY = bY + (580 * escalaFondo);
-        let comprarTuchiX = width / 2;
-        let comprarTuchiY = cartelY + (640 * escalaFondo);
-        let tuchiAncho = 680 * escalaFondo;
-        let tuchiAlto = 220 * escalaFondo;
-
-        // Comprar superior -> Passline
-        if (mouseX > b1X - anchoBoton/2 && mouseX < b1X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
-          window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
-        }
-        // Tickets superior -> Passline
-        else if (mouseX > b2X - anchoBoton/2 && mouseX < b2X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
-          window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
-        }
-        // Japón superior -> Web de ceroasterisco
-        else if (mouseX > b3X - anchoBoton/2 && mouseX < b3X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
-          window.open("https://www.ceroasterisco.com/#japon", "_blank");
-        }
-        // Botón inferior de compra -> Tienda Nube (remera)
-        else if (mouseX > comprarTuchiX - tuchiAncho/2 && mouseX < comprarTuchiX + tuchiAncho/2 && mouseY > comprarTuchiY - tuchiAlto/2 && mouseY < comprarTuchiY + tuchiAlto/2) {
-          window.open("https://spdvmerch.mitiendanube.com/productos/remera-cero-x-enzo-11uje/", "_blank");
-        }
-        else {
-          // Creación de pecesitos al hacer clic en espacios vacíos
-          for (let i = 0; i < random(1, 3); i++) {
-            peces.push(new Pez(mouseX, mouseY, false));
-          }
-        }
-      }
-    }
-
-    function mouseReleased() {
-      for (let p of polaroids) {
-        p.soltar();
-      }
-      objCero.soltar();
-      objLlaveCarta.soltar();
-    }
-
-    function windowResized() {
-      let altoCalculado = windowWidth * (altoOriginal / anchoOriginal);
-      resizeCanvas(windowWidth, altoCalculado);
-    }
-  </script>
-
-</body>
-</html>
+          if (polar
