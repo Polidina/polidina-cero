@@ -102,6 +102,7 @@
     let imgFondo, imgRostro, imgRestoOjos, imgPupilas, imgClick, imgPez, imgCamara;
     let imgComprar, imgTickets, imgJapon, imgEstrella, imgFlecha;
     let imgCartel, imgAuriculares, imgConejo, imgComprarTuchi, imgCero;
+    let imgLlaveCarta, imgLlaveAbriendo, imgCartaAbierta;
     let imgPolaroid20, imgPolaroid21, imgPolaroid22, imgPolaroid23, imgPolaroid24, imgPolaroid25;
 
     let anchoOriginal = 1728;
@@ -136,6 +137,12 @@
     let peces = [];
     let polaroids = []; 
     let objCero; 
+    let objLlaveCarta;
+
+    // Estados para controlar la secuencia de apertura de la carta
+    let estadoCarta = 0; // 0: Cerrada, 1: Abriendo (transición), 2: Abierta
+    let animacionCarta = 0.0; 
+    let timerAbriendo = 0;
 
     function preload() {
       imgFondo = loadImage(encodeURI('fondo.png'));
@@ -157,6 +164,11 @@
       imgConejo = loadImage(encodeURI('conejo.png'));
       imgComprarTuchi = loadImage(encodeURI('comprartuchi.png'));
       imgCero = loadImage(encodeURI('cero.png'));
+
+      // Carga de los 3 pasos de la carta[cite: 2]
+      imgLlaveCarta = loadImage(encodeURI('llaveconcarta.png'));
+      imgLlaveAbriendo = loadImage(encodeURI('llaveconcartaabriendose.png'));
+      imgCartaAbierta = loadImage(encodeURI('carta abierta.png'));
 
       imgPolaroid20 = loadImage(encodeURI('image 20.png'));
       imgPolaroid21 = loadImage(encodeURI('image 21.png'));
@@ -182,7 +194,7 @@
       let basePolaroidsY = comprarTuchiY + (470 * (width / anchoOriginal)); 
       let escalaP = 1.05;
 
-      // Creamos las polaroids
+      // 1. Creamos las polaroids normales
       polaroids.push(new Polaroid(cartelX - (440 * (width / anchoOriginal)), basePolaroidsY, imgPolaroid20, -6, escalaP));
       polaroids.push(new Polaroid(cartelX - (110 * (width / anchoOriginal)), basePolaroidsY - (30 * (width / anchoOriginal)), imgPolaroid21, -25, escalaP));
       polaroids.push(new Polaroid(cartelX - (190 * (width / anchoOriginal)), basePolaroidsY + (340 * (width / anchoOriginal)), imgPolaroid23, 2, escalaP));
@@ -190,7 +202,10 @@
       polaroids.push(new Polaroid(cartelX + (380 * (width / anchoOriginal)), basePolaroidsY - (70 * (width / anchoOriginal)), imgPolaroid22, 8, escalaP));
       polaroids.push(new Polaroid(cartelX + (390 * (width / anchoOriginal)), basePolaroidsY + (320 * (width / anchoOriginal)), imgPolaroid25, -4, escalaP));
 
-      // Creamos el objeto cero.png en el extremo izquierdo
+      // 2. Colocamos la carta cerrada (llaveconcarta.png) ESCONDIDA Y MEZCLADA entre las fotos del montón
+      objLlaveCarta = new Polaroid(cartelX - (50 * (width / anchoOriginal)), basePolaroidsY + (120 * (width / anchoOriginal)), imgLlaveCarta, -12, escalaP);
+
+      // 3. Objeto cero.png arriba de todo
       objCero = new Polaroid(cartelX - (470 * (width / anchoOriginal)), basePolaroidsY + (370 * (width / anchoOriginal)), imgCero, -4, 0.9);
     }
 
@@ -412,16 +427,68 @@
       image(imgEstrella, 0, 0);
       pop();
 
-      // --- 9. DIBUJAR LAS POLAROIDS Y LUEGO CERO.PNG ARRIBA DE TODO ---
+      // --- 9. DIBUJAR EL MONTÓN DE FOTOS (POLAROIDS + CARTA ESCONDIDA) ---
       for (let p of polaroids) {
         p.actualizar();
         p.dibujar(escalaFondo);
       }
 
+      // La carta se dibuja mezclada junto con el resto de las polaroids del montón
+      objLlaveCarta.actualizar();
+      objLlaveCarta.dibujar(escalaFondo);
+
       objCero.actualizar();
       objCero.dibujar(escalaFondo);
 
-      // --- 10. CURSOR PERSONALIZADO ---
+      // --- 10. GESTIÓN DE LA ANIMACIÓN DE APERTURA Y MODAL DE CARTA ---
+      if (estadoCarta === 1) {
+        if (millis() - timerAbriendo > 350) {
+          estadoCarta = 2; // Pasa a abierta por completo
+        }
+      }
+
+      animacionCarta = lerp(animacionCarta, (estadoCarta > 0) ? 1.0 : 0.0, 0.15);
+      
+      if (animacionCarta > 0.01) {
+        push();
+        // Fondo oscuro semitransparente
+        fill(0, 0, 0, animacionCarta * 200);
+        rect(0, 0, width, height);
+
+        translate(width / 2, height / 2);
+        let escalaAnim = 0.8 + (animacionCarta * 0.2);
+        scale(escalaAnim);
+        imageMode(CENTER);
+
+        // Muestra el paso intermedio o la carta abierta según el estado[cite: 2]
+        if (estadoCarta === 1) {
+          image(imgLlaveAbriendo, 0, 0);
+        } else {
+          image(imgCartaAbierta, 0, 0);
+
+          // Botón con una "X" para cerrar solo cuando ya está totalmente abierta
+          let cartaAncho = imgCartaAbierta.width * escalaFondo * 0.9;
+          let cartaAlto = imgCartaAbierta.height * escalaFondo * 0.9;
+          
+          let xBtnX = cartaAncho / 2 - 50;
+          let xBtnY = -cartaAlto / 2 + 50;
+
+          let hoverX = dist(mouseX - width/2, mouseY - height/2, xBtnX, xBtnY) < 35;
+          
+          fill(hoverX ? 255 : 200, hoverX ? 100 : 100, 100);
+          noStroke();
+          ellipse(xBtnX, xBtnY, 50, 50);
+
+          fill(255);
+          textSize(28);
+          textAlign(CENTER, CENTER);
+          text("✕", xBtnX, xBtnY + 2);
+        }
+
+        pop();
+      }
+
+      // --- 11. CURSOR PERSONALIZADO ---
       push();
       imageMode(CORNER);
       let tamCursor = 40 * escalaFondo;
@@ -547,9 +614,35 @@
     function mousePressed() {
       let escalaFondo = width / anchoOriginal;
 
+      // Si la carta ya está completamente abierta, solo evaluamos hacer clic en la X para cerrar
+      if (estadoCarta === 2) {
+        let cartaAncho = imgCartaAbierta.width * escalaFondo * 0.9;
+        let cartaAlto = imgCartaAbierta.height * escalaFondo * 0.9;
+        let xBtnX = width / 2 + cartaAncho / 2 - 50;
+        let xBtnY = height / 2 - cartaAlto / 2 + 50;
+
+        if (dist(mouseX, mouseY, xBtnX, xBtnY) < 35) {
+          estadoCarta = 0; // Se cierra
+        }
+        return; 
+      }
+
+      if (estadoCarta === 1) return;
+
       let elementoAgarrado = false;
 
-      // 1. Verificar si hacemos clic en cero.png o en las polaroids para arrastrarlas
+      // 1. Verificar si hacemos clic en la carta escondida (para abrirla)
+      if (objLlaveCarta.verificarPresionado(mouseX, mouseY, escalaFondo)) {
+        elementoAgarrado = true;
+        // Al hacer clic en ella, inicia la animación de apertura
+        estadoCarta = 1; 
+        timerAbriendo = millis();
+        // La soltamos de inmediato para que no se quede pegada al mouse arrastrándose
+        objLlaveCarta.soltar();
+        return;
+      }
+
+      // 2. Verificar cero.png o las demás polaroids
       if (objCero.verificarPresionado(mouseX, mouseY, escalaFondo)) {
         elementoAgarrado = true;
       } else {
@@ -563,8 +656,8 @@
         }
       }
 
-      // 2. Si no agarramos ninguna imagen, evaluamos clics en los botones interactivos
-      if (!elementoAgarrado) {
+      // 3. Botones interactivos y creación de peces en espacios vacíos
+      if (!elementoAgarrado && estadoCarta === 0) {
         let personajeX = width / 2;
         let personajeY = posYOriginal * escalaFondo;
         let radioHover = 200 * escalaFondo;
@@ -605,7 +698,7 @@
           window.open("https://spdvmerch.mitiendanube.com/productos/remera-cero-x-enzo-11uje/", "_blank");
         }
         else {
-          // Si el clic fue en cualquier otro espacio vacío de la pantalla, nacen los peces
+          // Creación de pecesitos al hacer clic en espacios vacíos
           for (let i = 0; i < random(1, 3); i++) {
             peces.push(new Pez(mouseX, mouseY, false));
           }
@@ -618,6 +711,7 @@
         p.soltar();
       }
       objCero.soltar();
+      objLlaveCarta.soltar();
     }
 
     function windowResized() {
