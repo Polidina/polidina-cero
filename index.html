@@ -194,7 +194,7 @@
       let basePolaroidsY = comprarTuchiY + (470 * (width / anchoOriginal)); 
       let escalaP = 1.05;
 
-      // 1. CARTA PEQUEÑA ESCONDIDA ATRÁS: Se dibuja primero y tiene escala chica (0.35)
+      // 1. CARTA PEQUEÑA ESCONDIDA ATRÁS
       objLlaveCarta = new Polaroid(cartelX - (120 * (width / anchoOriginal)), basePolaroidsY + (80 * (width / anchoOriginal)), imgLlaveCarta, 15, 0.35);
 
       // 2. POLAROIDS ENCIMA
@@ -441,8 +441,7 @@
 
       // --- 10. GESTIÓN DE LA ANIMACIÓN Y TRANSICIÓN DE LOS 3 ESTADOS DE LA CARTA ---
       if (estadoCarta === 1) {
-        // Duración del estado intermedio (llaveconcartaabriendose.png) -> ej: 350 milisegundos
-        if (millis() - timerAbriendo > 350) {
+        if (millis() - timerAbriendo > 600) {
           estadoCarta = 2; // Pasa a abierta por completo
         }
       }
@@ -456,33 +455,44 @@
         rect(0, 0, width, height);
 
         translate(width / 2, height / 2);
-        let escalaAnim = 0.8 + (animacionCarta * 0.2);
-        scale(escalaAnim);
         imageMode(CENTER);
 
         // Renderiza según el estado de la animación[cite: 2]
         if (estadoCarta === 1) {
-          image(imgLlaveAbriendo, 0, 0); // 2. Paso intermedio (abriéndose)
+          let escalaAbriendo = escalaFondo * 0.85;
+          scale(escalaAbriendo);
+          image(imgLlaveAbriendo, 0, 0);
         } else {
-          image(imgCartaAbierta, 0, 0);   // 3. Carta abierta con texto
+          // CARTA ABIERTA: Mucho más chica (50% del espacio disponible para asegurar buen responsive)
+          let margenMaxW = width * 0.50;
+          let margenMaxH = height * 0.50;
+          let factorEscalaW = margenMaxW / imgCartaAbierta.width;
+          let factorEscalaH = margenMaxH / imgCartaAbierta.height;
+          let escalaCartaFinal = min(factorEscalaW, factorEscalaH);
 
-          // Botón con una "X" para cerrar cuando está abierta
-          let cartaAncho = imgCartaAbierta.width * escalaFondo * 0.9;
-          let cartaAlto = imgCartaAbierta.height * escalaFondo * 0.9;
-          
-          let xBtnX = cartaAncho / 2 - 50;
-          let xBtnY = -cartaAlto / 2 + 50;
+          scale(escalaCartaFinal);
+          image(imgCartaAbierta, 0, 0);
 
-          let hoverX = dist(mouseX - width/2, mouseY - height/2, xBtnX, xBtnY) < 35;
+          // Botón con una "X" para cerrar ubicado exactamente en la esquina superior derecha de la carta compacta
+          let cartaAnchoReal = imgCartaAbierta.width * escalaCartaFinal;
+          let cartaAltoReal = imgCartaAbierta.height * escalaCartaFinal;
           
-          fill(hoverX ? 255 : 200, hoverX ? 100 : 100, 100);
+          let xBtnX = cartaAnchoReal / 2 - 30;
+          let xBtnY = -cartaAltoReal / 2 + 30;
+
+          let hoverX = dist(mouseX, mouseY, width/2 + xBtnX, height/2 + xBtnY) < 25;
+          
+          push();
+          translate(cartaAnchoReal / 2 - 30, -cartaAltoReal / 2 + 30);
+          fill(hoverX ? 255 : 220, hoverX ? 90 : 80, 80);
           noStroke();
-          ellipse(xBtnX, xBtnY, 50, 50);
+          ellipse(0, 0, 35, 35);
 
           fill(255);
-          textSize(28);
+          textSize(20);
           textAlign(CENTER, CENTER);
-          text("✕", xBtnX, xBtnY + 2);
+          text("✕", 0, 1);
+          pop();
         }
 
         pop();
@@ -616,12 +626,19 @@
 
       // Si la carta está completamente abierta, comprobamos si hace clic en la X para cerrar
       if (estadoCarta === 2) {
-        let cartaAncho = imgCartaAbierta.width * escalaFondo * 0.9;
-        let cartaAlto = imgCartaAbierta.height * escalaFondo * 0.9;
-        let xBtnX = width / 2 + cartaAncho / 2 - 50;
-        let xBtnY = height / 2 - cartaAlto / 2 + 50;
+        let margenMaxW = width * 0.50;
+        let margenMaxH = height * 0.50;
+        let factorEscalaW = margenMaxW / imgCartaAbierta.width;
+        let factorEscalaH = margenMaxH / imgCartaAbierta.height;
+        let escalaCartaFinal = min(factorEscalaW, factorEscalaH);
 
-        if (dist(mouseX, mouseY, xBtnX, xBtnY) < 35) {
+        let cartaAnchoReal = imgCartaAbierta.width * escalaCartaFinal;
+        let cartaAltoReal = imgCartaAbierta.height * escalaCartaFinal;
+        
+        let xBtnX = width / 2 + cartaAnchoReal / 2 - 30;
+        let xBtnY = height / 2 - cartaAltoReal / 2 + 30;
+
+        if (dist(mouseX, mouseY, xBtnX, xBtnY) < 25) {
           estadoCarta = 0; // Cierra la carta
         }
         return; 
@@ -631,16 +648,39 @@
 
       let elementoAgarrado = false;
 
-      // 1. Verificamos si hace clic en la carta pequeña escondida (1. llaveconcarta)
-      if (objLlaveCarta.verificarPresionado(mouseX, mouseY, escalaFondo)) {
-        elementoAgarrado = true;
-        estadoCarta = 1; // Pasa al estado 2: llaveconcartaabriendose[cite: 2]
-        timerAbriendo = millis();
-        objLlaveCarta.soltar(); // Evita que se arrastre
-        return;
+      // 1. Verificar si hay alguna otra imagen (cero.png o polaroids) encima de la carta que bloquee el acceso
+      let wLlave = imgLlaveCarta.width * escalaFondo * objLlaveCarta.escalaBase;
+      let hLlave = imgLlaveCarta.height * escalaFondo * objLlaveCarta.escalaBase;
+      let clickEnLlave = (mouseX > objLlaveCarta.x - wLlave/2 && mouseX < objLlaveCarta.x + wLlave/2 && 
+                          mouseY > objLlaveCarta.y - hLlave/2 && mouseY < objLlaveCarta.y + hLlave/2);
+
+      if (clickEnLlave) {
+        // Comprobamos si objCero está encima
+        let wCero = imgCero.width * escalaFondo * objCero.escalaBase;
+        let hCero = imgCero.height * escalaFondo * objCero.escalaBase;
+        let tapadoPorCero = (mouseX > objCero.x - wCero/2 && mouseX < objCero.x + wCero/2 && 
+                             mouseY > objCero.y - hCero/2 && mouseY < objCero.y + hCero/2);
+
+        // Comprobamos si alguna polaroid está encima
+        let tapadoPorPolaroid = false;
+        for (let p of polaroids) {
+          let wP = p.img.width * escalaFondo * p.escalaBase;
+          let hP = p.img.height * escalaFondo * p.escalaBase;
+          if (mouseX > p.x - wP/2 && mouseX < p.x + wP/2 && mouseY > p.y - hP/2 && mouseY < p.y + hP/2) {
+            tapadoPorPolaroid = true;
+            break;
+          }
+        }
+
+        // Si NO está tapada por otra imagen, se puede abrir
+        if (!tapadoPorCero && !tapadoPorPolaroid) {
+          estadoCarta = 1; // Pasa al estado 2: llaveconcartaabriendose[cite: 2]
+          timerAbriendo = millis();
+          return;
+        }
       }
 
-      // 2. Verificar cero.png o polaroids normales
+      // 2. Verificar cero.png o polaroids normales para arrastrarlas
       if (objCero.verificarPresionado(mouseX, mouseY, escalaFondo)) {
         elementoAgarrado = true;
       } else {
