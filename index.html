@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>cero*</title>
+  <title> yo pray | cero* | ゼロ </title>
   <!-- Favicon personalizado -->
   <link rel="icon" type="image/png" href="cerito.png">
   
@@ -81,13 +81,13 @@
   <!-- Barra superior con botones de música y créditos -->
   <header class="nav-bar">
       <div class="nav-left">
-          <a href="https://open.spotify.com" target="_blank">
+          <a href="https://open.spotify.com/intl-es/album/1oewbFslWDSzh9Rl7Y483n?si=_b7RBWDRSle_JelfGIUpLg&nd=1&dlsi=7c83b2c8a82b461a" target="_blank">
               <img src="spotify.png" alt="Spotify" class="btn-img">
           </a>
-          <a href="https://music.apple.com" target="_blank">
+          <a href="https://music.apple.com/ar/album/yo-pray/6794937668" target="_blank">
               <img src="apple music.png" alt="Apple Music" class="btn-img">
           </a>
-          <a href="https://www.youtube.com" target="_blank">
+          <a href="https://www.youtube.com/watch?v=P3XPnvSqcIo&list=OLAK5uy_ma5mWTG930Aj0sepyDvZHS6kKsjOudQjc" target="_blank">
               <img src="youtube.png" alt="YouTube" class="btn-img">
           </a>
       </div>
@@ -179,9 +179,6 @@
       let bY = botonesYOriginal * (width / anchoOriginal);
       let cartelY = bY + (580 * (width / anchoOriginal));
       let comprarTuchiY = cartelY + (640 * (width / anchoOriginal));
-      
-      // --- ESPACIO AJUSTADO ---
-      // Ahora está un poco más arriba (restando en vez de sumando tanto) respecto a comprarTuchiY
       let basePolaroidsY = comprarTuchiY + (470 * (width / anchoOriginal)); 
       let escalaP = 1.05;
 
@@ -193,7 +190,7 @@
       polaroids.push(new Polaroid(cartelX + (380 * (width / anchoOriginal)), basePolaroidsY - (70 * (width / anchoOriginal)), imgPolaroid22, 8, escalaP));
       polaroids.push(new Polaroid(cartelX + (390 * (width / anchoOriginal)), basePolaroidsY + (320 * (width / anchoOriginal)), imgPolaroid25, -4, escalaP));
 
-      // Creamos el objeto cero.png en el extremo izquierdo (también desplazado más arriba)
+      // Creamos el objeto cero.png en el extremo izquierdo
       objCero = new Polaroid(cartelX - (470 * (width / anchoOriginal)), basePolaroidsY + (370 * (width / anchoOriginal)), imgCero, -4, 0.9);
     }
 
@@ -584,14 +581,17 @@
         let b2X = ticketsXOriginal * escalaFondo;
         let b3X = japonXOriginal * escalaFondo;
 
+        // Comprar superior -> Passline
         if (mouseX > b1X - anchoBoton/2 && mouseX < b1X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
-          window.open("https://example.com/comprar", "_blank");
+          window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
         }
+        // Tickets superior -> Passline
         if (mouseX > b2X - anchoBoton/2 && mouseX < b2X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
-          window.open("https://example.com/tickets", "_blank");
+          window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
         }
+        // Japón superior -> Web de ceroasterisco
         if (mouseX > b3X - anchoBoton/2 && mouseX < b3X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
-          window.open("https://example.com/japon", "_blank");
+          window.open("https://www.ceroasterisco.com/#japon", "_blank");
         }
 
         let cartelY = bY + (580 * escalaFondo);
@@ -600,8 +600,16 @@
         let tuchiAncho = 680 * escalaFondo;
         let tuchiAlto = 220 * escalaFondo;
 
+        // Botón inferior de compra -> Tienda Nube (remera)
         if (mouseX > comprarTuchiX - tuchiAncho/2 && mouseX < comprarTuchiX + tuchiAncho/2 && mouseY > comprarTuchiY - tuchiAlto/2 && mouseY < comprarTuchiY + tuchiAlto/2) {
-          window.open("https://example.com/comprartuchi", "_blank");
+          window.open("https://spdvmerch.mitiendanube.com/productos/remera-cero-x-enzo-11uje/", "_blank");
+        }
+
+        // Clic en el póster (cartel.png) -> Passline
+        let cartelAncho = 1300 * escalaFondo; // Ancho aproximado del póster
+        let cartelAlto = 1400 * escalaFondo;  // Alto aproximado del póster
+        if (mouseX > cartelX - cartelAncho/2 && mouseX < cartelX + cartelAncho/2 && mouseY > cartelY - cartelAlto/2 && mouseY < cartelY + cartelAlto/2) {
+          window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
         }
 
         for (let i = 0; i < random(1, 3); i++) {
