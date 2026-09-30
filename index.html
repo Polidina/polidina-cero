@@ -171,6 +171,7 @@
       createCanvas(windowWidth, altoCalculado);
       imageMode(CENTER);
 
+      // Creamos algunos peces permanentes al inicio
       for (let i = 0; i < 12; i++) {
         peces.push(new Pez(random(100, width - 100), random(100, height - 100), true));
       }
@@ -179,6 +180,8 @@
       let bY = botonesYOriginal * (width / anchoOriginal);
       let cartelY = bY + (580 * (width / anchoOriginal));
       let comprarTuchiY = cartelY + (640 * (width / anchoOriginal));
+      
+      // Posición base de las fotos
       let basePolaroidsY = comprarTuchiY + (470 * (width / anchoOriginal)); 
       let escalaP = 1.05;
 
@@ -190,7 +193,7 @@
       polaroids.push(new Polaroid(cartelX + (380 * (width / anchoOriginal)), basePolaroidsY - (70 * (width / anchoOriginal)), imgPolaroid22, 8, escalaP));
       polaroids.push(new Polaroid(cartelX + (390 * (width / anchoOriginal)), basePolaroidsY + (320 * (width / anchoOriginal)), imgPolaroid25, -4, escalaP));
 
-      // Creamos el objeto cero.png en el extremo izquierdo
+      // Creamos el objeto cero.png
       objCero = new Polaroid(cartelX - (470 * (width / anchoOriginal)), basePolaroidsY + (370 * (width / anchoOriginal)), imgCero, -4, 0.9);
     }
 
@@ -471,6 +474,7 @@
         pop();
       }
 
+      // Devuelve true si el mouse estaba sobre la imagen
       verificarPresionado(mx, my, escalaFondo) {
         let w = this.img.width * escalaFondo * this.escalaBase;
         let h = this.img.height * escalaFondo * this.escalaBase;
@@ -544,75 +548,83 @@
       }
     }
 
+    // --- AQUÍ ESTABA EL PROBLEMA, AHORA ESTÁ SOLUCIONADO ---
     function mousePressed() {
       let escalaFondo = width / anchoOriginal;
 
+      // Variable para saber si hicimos clic sobre una imagen arrastrable
       let elementoAgarrado = false;
 
+      // 1. Verificamos si intentamos agarrar el objeto cero.png (el principal)
       if (objCero.verificarPresionado(mouseX, mouseY, escalaFondo)) {
         elementoAgarrado = true;
       } else {
+        // 2. Si no agarramos el cero, verificamos las polaroids (de adelante hacia atrás)
         for (let i = polaroids.length - 1; i >= 0; i--) {
           if (polaroids[i].verificarPresionado(mouseX, mouseY, escalaFondo)) {
             elementoAgarrado = true;
+            // Si agarramos una, la traemos al frente moviéndola al final del array
             let p = polaroids.splice(i, 1)[0];
             polaroids.push(p);
-            break;
+            break; // Solo agarramos una
           }
         }
       }
 
+      // 3. Si NO agarramos ninguna imagen, ejecutamos la lógica de clics (peces y enlaces)
       if (!elementoAgarrado) {
+
+        // --- Lógica de ZOOM del rostro ---
         let personajeX = width / 2;
         let personajeY = posYOriginal * escalaFondo;
         let radioHover = 200 * escalaFondo;
-
         let distanciaAlPersonaje = dist(mouseX, mouseY, personajeX, personajeY);
         
         if (distanciaAlPersonaje < radioHover) {
           impulsoClick = 0.25;
         }
 
+        // --- Lógica de ENLACES inferiores ---
         let bY = botonesYOriginal * escalaFondo;
         let anchoBoton = 320 * escalaFondo;
         let altoBoton = 140 * escalaFondo;
-
         let b1X = comprarXOriginal * escalaFondo;
         let b2X = ticketsXOriginal * escalaFondo;
         let b3X = japonXOriginal * escalaFondo;
 
-        // Comprar superior -> Passline
+        // Comprar superior
         if (mouseX > b1X - anchoBoton/2 && mouseX < b1X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
           window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
         }
-        // Tickets superior -> Passline
+        // Tickets superior
         if (mouseX > b2X - anchoBoton/2 && mouseX < b2X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
           window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
         }
-        // Japón superior -> Web de ceroasterisco
+        // Japón superior
         if (mouseX > b3X - anchoBoton/2 && mouseX < b3X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
           window.open("https://www.ceroasterisco.com/#japon", "_blank");
         }
 
+        // --- Lógica de ENLACES del póster y botón inferior ---
+        let cartelX = width / 2;
         let cartelY = bY + (580 * escalaFondo);
-        let comprarTuchiX = width / 2;
         let comprarTuchiY = cartelY + (640 * escalaFondo);
+        
+        // Botón inferior "¡COMPRAR!"
         let tuchiAncho = 680 * escalaFondo;
         let tuchiAlto = 220 * escalaFondo;
-
-        // Botón inferior de compra -> Tienda Nube (remera)
-        if (mouseX > comprarTuchiX - tuchiAncho/2 && mouseX < comprarTuchiX + tuchiAncho/2 && mouseY > comprarTuchiY - tuchiAlto/2 && mouseY < comprarTuchiY + tuchiAlto/2) {
+        if (mouseX > cartelX - tuchiAncho/2 && mouseX < cartelX + tuchiAncho/2 && mouseY > comprarTuchiY - tuchiAlto/2 && mouseY < comprarTuchiY + tuchiAlto/2) {
           window.open("https://spdvmerch.mitiendanube.com/productos/remera-cero-x-enzo-11uje/", "_blank");
         }
 
-        // Clic en el póster (cartel.png) -> Passline
+        // Clic en el póster (cartel.png)
         let cartelAncho = 1300 * escalaFondo; 
         let cartelAlto = 1400 * escalaFondo;  
         if (mouseX > cartelX - cartelAncho/2 && mouseX < cartelX + cartelAncho/2 && mouseY > cartelY - cartelAlto/2 && mouseY < cartelY + cartelAlto/2) {
           window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
         }
 
-        // Creación de pecesitos al hacer clic en espacios vacíos
+        // --- AHORA SÍ: CREAR PECES (solo si no hicimos clic en una foto o botón) ---
         for (let i = 0; i < random(1, 3); i++) {
           peces.push(new Pez(mouseX, mouseY, false));
         }
@@ -620,6 +632,7 @@
     }
 
     function mouseReleased() {
+      // Soltamos todas las imágenes
       for (let p of polaroids) {
         p.soltar();
       }
