@@ -480,7 +480,6 @@
           let xBtnX = cartaAnchoReal / 2 - 30;
           let xBtnY = -cartaAltoReal / 2 + 30;
 
-          // Detección del hover de la X usando coordenadas globales
           let hoverX = dist(mouseX, mouseY, width/2 + xBtnX, height/2 + xBtnY) < 25;
           
           push();
@@ -625,9 +624,8 @@
     function mousePressed() {
       let escalaFondo = width / anchoOriginal;
 
-      // CORREGIDO: Si la carta está completamente abierta, comprobamos si hace clic en la X para cerrar
+      // Si la carta está completamente abierta, comprobamos si hace clic en la X para cerrar
       if (estadoCarta === 2) {
-        // Recalculamos exactamente el mismo escalado y posición que se usa en draw()
         let margenMaxW = width * 0.50;
         let margenMaxH = height * 0.50;
         let factorEscalaW = margenMaxW / imgCartaAbierta.width;
@@ -637,15 +635,12 @@
         let cartaAnchoReal = imgCartaAbierta.width * escalaCartaFinal;
         let cartaAltoReal = imgCartaAbierta.height * escalaCartaFinal;
         
-        // Posición del botón relativo al centro de la pantalla
         let xBtnX_offset = cartaAnchoReal / 2 - 30;
         let xBtnY_offset = -cartaAltoReal / 2 + 30;
 
-        // Coordenadas globales absolutas del botón X en la pantalla
         let xBtnX_global = width / 2 + xBtnX_offset;
         let xBtnY_global = height / 2 + xBtnY_offset;
 
-        // Detectamos el clic en el botón X usando las coordenadas globales corregidas
         if (dist(mouseX, mouseY, xBtnX_global, xBtnY_global) < 25) {
           estadoCarta = 0; // Cierra la carta correctamente
         }
@@ -656,20 +651,18 @@
 
       let elementoAgarrado = false;
 
-      // 1. Verificar si hay alguna otra imagen (cero.png o polaroids) encima de la carta que bloquee el acceso
+      // 1. Verificar si hay alguna otra imagen encima de la carta que bloquee el acceso
       let wLlave = imgLlaveCarta.width * escalaFondo * objLlaveCarta.escalaBase;
       let hLlave = imgLlaveCarta.height * escalaFondo * objLlaveCarta.escalaBase;
       let clickEnLlave = (mouseX > objLlaveCarta.x - wLlave/2 && mouseX < objLlaveCarta.x + wLlave/2 && 
                           mouseY > objLlaveCarta.y - hLlave/2 && mouseY < objLlaveCarta.y + hLlave/2);
 
       if (clickEnLlave) {
-        // Comprobamos si objCero está encima
         let wCero = imgCero.width * escalaFondo * objCero.escalaBase;
         let hCero = imgCero.height * escalaFondo * objCero.escalaBase;
         let tapadoPorCero = (mouseX > objCero.x - wCero/2 && mouseX < objCero.x + wCero/2 && 
                              mouseY > objCero.y - hCero/2 && mouseY < objCero.y + hCero/2);
 
-        // Comprobamos si alguna polaroid está encima
         let tapadoPorPolaroid = false;
         for (let p of polaroids) {
           let wP = p.img.width * escalaFondo * p.escalaBase;
@@ -680,7 +673,6 @@
           }
         }
 
-        // Si NO está tapada por otra imagen, se puede abrir
         if (!tapadoPorCero && !tapadoPorPolaroid) {
           estadoCarta = 1; // Pasa al estado 2: llaveconcartaabriendose[cite: 2]
           timerAbriendo = millis();
@@ -693,4 +685,73 @@
         elementoAgarrado = true;
       } else {
         for (let i = polaroids.length - 1; i >= 0; i--) {
-          if (polar
+          if (polaroids[i].verificarPresionado(mouseX, mouseY, escalaFondo)) {
+            elementoAgarrado = true;
+            let p = polaroids.splice(i, 1)[0];
+            polaroids.push(p);
+            break;
+          }
+        }
+      }
+
+      // 3. Botones y creación de peces en espacios vacíos
+      if (!elementoAgarrado && estadoCarta === 0) {
+        let personajeX = width / 2;
+        let personajeY = posYOriginal * escalaFondo;
+        let radioHover = 200 * escalaFondo;
+
+        let distanciaAlPersonaje = dist(mouseX, mouseY, personajeX, personajeY);
+        if (distanciaAlPersonaje < radioHover) {
+          impulsoClick = 0.25;
+        }
+
+        let bY = botonesYOriginal * escalaFondo;
+        let anchoBoton = 320 * escalaFondo;
+        let altoBoton = 140 * escalaFondo;
+
+        let b1X = comprarXOriginal * escalaFondo;
+        let b2X = ticketsXOriginal * escalaFondo;
+        let b3X = japonXOriginal * escalaFondo;
+
+        let cartelY = bY + (580 * escalaFondo);
+        let comprarTuchiX = width / 2;
+        let comprarTuchiY = cartelY + (640 * escalaFondo);
+        let tuchiAncho = 680 * escalaFondo;
+        let tuchiAlto = 220 * escalaFondo;
+
+        if (mouseX > b1X - anchoBoton/2 && mouseX < b1X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
+          window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
+        }
+        else if (mouseX > b2X - anchoBoton/2 && mouseX < b2X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
+          window.open("https://www.passline.com/eventos/cero-en-c-art-media", "_blank");
+        }
+        else if (mouseX > b3X - anchoBoton/2 && mouseX < b3X + anchoBoton/2 && mouseY > bY - altoBoton/2 && mouseY < bY + altoBoton/2) {
+          window.open("https://www.ceroasterisco.com/#japon", "_blank");
+        }
+        else if (mouseX > comprarTuchiX - tuchiAncho/2 && mouseX < comprarTuchiX + tuchiAncho/2 && mouseY > comprarTuchiY - tuchiAlto/2 && mouseY < comprarTuchiY + tuchiAlto/2) {
+          window.open("https://spdvmerch.mitiendanube.com/productos/remera-cero-x-enzo-11uje/", "_blank");
+        }
+        else {
+          for (let i = 0; i < random(1, 3); i++) {
+            peces.push(new Pez(mouseX, mouseY, false));
+          }
+        }
+      }
+    }
+
+    function mouseReleased() {
+      for (let p of polaroids) {
+        p.soltar();
+      }
+      objCero.soltar();
+      objLlaveCarta.soltar();
+    }
+
+    function windowResized() {
+      let altoCalculado = windowWidth * (altoOriginal / anchoOriginal);
+      resizeCanvas(windowWidth, altoCalculado);
+    }
+  </script>
+
+</body>
+</html>
