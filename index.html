@@ -144,6 +144,9 @@
     let animacionCarta = 0.0; 
     let timerAbriendo = 0;
 
+    // Coordenadas globales calculadas en el draw para detectar el botón de cierre con precisión
+    let btnXGlobal = 0, btnYGlobal = 0, btnRadioGlobal = 25;
+
     function preload() {
       imgFondo = loadImage(encodeURI('fondo.png'));
       imgRostro = loadImage(encodeURI('resto de rostro.png'));
@@ -473,17 +476,33 @@
           scale(escalaCartaFinal);
           image(imgCartaAbierta, 0, 0);
 
-          // Botón con una "X" para cerrar ubicado exactamente en la esquina superior derecha de la carta compacta
+          // Texto de agradecimiento dentro de la carta
+          push();
+          fill(50, 40, 30); // Tono oscuro legible sobre fondo de carta
+          noStroke();
+          textSize(Math.max(14, 22 * escalaCartaFinal));
+          textAlign(CENTER, CENTER);
+          // Ancho máximo del texto dentro de la carta para que haga salto de línea automático prolijo
+          let anchoTexto = imgCartaAbierta.width * 0.7;
+          textWrap(WORD);
+          text("¡Muchas gracias por explorar la página web! Este espacio fue creado puramente por diversión, diseño y experimentación. ¡Esperamos que lo disfrutes!", 0, 10, anchoTexto);
+          pop();
+
+          // Guardamos las coordenadas globales exactas del botón X para detectar el clic en mousePressed()
           let cartaAnchoReal = imgCartaAbierta.width * escalaCartaFinal;
           let cartaAltoReal = imgCartaAbierta.height * escalaCartaFinal;
           
-          let xBtnX = cartaAnchoReal / 2 - 30;
-          let xBtnY = -cartaAltoReal / 2 + 30;
+          let localBtnX = cartaAnchoReal / 2 - 30;
+          let localBtnY = -cartaAltoReal / 2 + 30;
 
-          let hoverX = dist(mouseX, mouseY, width/2 + xBtnX, height/2 + xBtnY) < 25;
+          btnXGlobal = width / 2 + localBtnX;
+          btnYGlobal = height / 2 + localBtnY;
+          btnRadioGlobal = 25;
+
+          let hoverX = dist(mouseX, mouseY, btnXGlobal, btnYGlobal) < btnRadioGlobal;
           
           push();
-          translate(xBtnX, xBtnY);
+          translate(localBtnX, localBtnY);
           fill(hoverX ? 255 : 220, hoverX ? 90 : 80, 80);
           noStroke();
           ellipse(0, 0, 35, 35);
@@ -624,24 +643,9 @@
     function mousePressed() {
       let escalaFondo = width / anchoOriginal;
 
-      // Si la carta está completamente abierta, comprobamos si hace clic en la X para cerrar
+      // Si la carta está completamente abierta, comprobamos si hace clic en el botón X usando las coordenadas globales
       if (estadoCarta === 2) {
-        let margenMaxW = width * 0.50;
-        let margenMaxH = height * 0.50;
-        let factorEscalaW = margenMaxW / imgCartaAbierta.width;
-        let factorEscalaH = margenMaxH / imgCartaAbierta.height;
-        let escalaCartaFinal = min(factorEscalaW, factorEscalaH);
-
-        let cartaAnchoReal = imgCartaAbierta.width * escalaCartaFinal;
-        let cartaAltoReal = imgCartaAbierta.height * escalaCartaFinal;
-        
-        let xBtnX_offset = cartaAnchoReal / 2 - 30;
-        let xBtnY_offset = -cartaAltoReal / 2 + 30;
-
-        let xBtnX_global = width / 2 + xBtnX_offset;
-        let xBtnY_global = height / 2 + xBtnY_offset;
-
-        if (dist(mouseX, mouseY, xBtnX_global, xBtnY_global) < 25) {
+        if (dist(mouseX, mouseY, btnXGlobal, btnYGlobal) < btnRadioGlobal) {
           estadoCarta = 0; // Cierra la carta correctamente
         }
         return; 
