@@ -466,7 +466,7 @@
           scale(escalaAbriendo);
           image(imgLlaveAbriendo, 0, 0);
         } else {
-          // CARTA ABIERTA: Mucho más chica (50% del espacio disponible)
+          // CARTA ABIERTA: Compacta (50% del espacio disponible)
           let margenMaxW = width * 0.50;
           let margenMaxH = height * 0.50;
           let factorEscalaW = margenMaxW / imgCartaAbierta.width;
@@ -476,16 +476,20 @@
           scale(escalaCartaFinal);
           image(imgCartaAbierta, 0, 0);
 
-          // Texto de agradecimiento dentro de la carta
+          // Texto de agradecimiento más grande, ajustado al ancho de la carta abierta
           push();
-          fill(50, 40, 30); // Tono oscuro legible sobre fondo de carta
+          fill(40, 30, 20); // Tono oscuro y cálido ideal para lectura
           noStroke();
-          textSize(Math.max(14, 22 * escalaCartaFinal));
+          textSize(Math.max(18, 30 * escalaCartaFinal)); // Letra más grande y legible
+          textStyle(BOLD);
           textAlign(CENTER, CENTER);
-          // Ancho máximo del texto dentro de la carta para que haga salto de línea automático prolijo
-          let anchoTexto = imgCartaAbierta.width * 0.7;
+          
+          let anchoTexto = imgCartaAbierta.width * 0.68; // Ancho prolijo dentro de los bordes de la carta
+          let altoTexto = imgCartaAbierta.height * 0.65;
+          
           textWrap(WORD);
-          text("¡Muchas gracias por explorar la página web! Este espacio fue creado puramente por diversión, diseño y experimentación. ¡Esperamos que lo disfrutes!", 0, 10, anchoTexto);
+          // Dibujamos el texto bloque centrado (x: 0, y: 15 para bajarlo un poco del centro geométrico)
+          text("¡Muchas gracias por explorar la página web! Este espacio fue creado puramente por diversión, diseño y experimentación. ¡Esperamos que lo disfrutes!", 0, 15, anchoTexto, altoTexto);
           pop();
 
           // Guardamos las coordenadas globales exactas del botón X para detectar el clic en mousePressed()
@@ -509,6 +513,7 @@
 
           fill(255);
           textSize(20);
+          textStyle(NORMAL);
           textAlign(CENTER, CENTER);
           text("✕", 0, 1);
           pop();
